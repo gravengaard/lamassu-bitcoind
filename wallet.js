@@ -12,7 +12,7 @@ var SATOSHI_FACTOR = 1e8;
 
 var rpc = null;
 var pluginConfig = {
-  account: ''
+  account: '*'
 };
 
 // TODO: should it happen only once per run, or with each .config() call?
@@ -20,9 +20,12 @@ function initRpc() {
   var bitcoindConf = parseConf(pluginConfig.bitcoindConfigurationPath);
 
   var rpcConfig = {
-    protocol: 'http',
+    protocol: bitcoindConf.rpcssl || false ? 'https' : 'http',
     user: bitcoindConf.rpcuser,
-    pass: bitcoindConf.rpcpassword
+    pass: bitcoindConf.rpcpassword,
+    port: bitcoindConf.rpcport    || 8332,
+    host: bitcoindConf.rpcconnect || '127.0.0.1',
+    rejectUnauthorized: false
   };
 
   rpc = new RpcClient(rpcConfig);
