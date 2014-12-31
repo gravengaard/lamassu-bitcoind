@@ -12,7 +12,7 @@ var SATOSHI_FACTOR = 1e8;
 
 var rpc = null;
 var pluginConfig = {
-  account: '*'
+  account: ''
 };
 
 // TODO: should it happen only once per run, or with each .config() call?
@@ -25,7 +25,7 @@ function initRpc() {
     pass: bitcoindConf.rpcpassword,
     port: bitcoindConf.rpcport    || 8332,
     host: bitcoindConf.rpcconnect || '127.0.0.1',
-    rejectUnauthorized: false
+    rejectUnauthorized: bitcoindConf.rpcsslverify || true
   };
 
   rpc = new RpcClient(rpcConfig);
@@ -72,7 +72,7 @@ function parseConf(confPath) {
 // We want a balance that includes all spends (0 conf) but only deposits that
 // have at least 1 confirmation. getbalance does this for us automatically.
 exports.balance = function balance(callback) {
-  rpc.getBalance(pluginConfig.account, 1, function(err, result) {
+  rpc.getBalance('*', 1, function(err, result) {
     if (err) return callback(err);
 
     if (result.error) {
@@ -87,11 +87,10 @@ exports.balance = function balance(callback) {
 
 
 exports.sendBitcoins = function sendBitcoins(address, satoshis, fee, callback) {
-  var confirmations = 1;
   var bitcoins = (satoshis / SATOSHI_FACTOR).toFixed(8);
 
   console.log('bitcoins: %s', bitcoins);
-  rpc.sendFrom(pluginConfig.account, address, bitcoins, confirmations, function(err, result) {
+  rpc.sendToAddress(address, bitcoins, '', '', function(err, result) {
     if (err) {
       if (err.code === -6) {
         return callback(richError('Insufficient funds', 'InsufficientFunds'));
